@@ -120,5 +120,7 @@ def interpret():
     response = call_qwen_model(hexagram, question)
     return jsonify({"interpretation": response})
 
-if __name__ == "__main__":
-    app.run(host="localhost", port=5001, debug=True)  # 修改 host 为 localhost
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))  # 获取 Render 提供的端口
+    app.run(host='0.0.0.0', port=port, debug=True)
+
