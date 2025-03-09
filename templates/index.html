@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卦象轮盘</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            background-size: cover;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 90%;
+            margin: 20px auto;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(47, 23, 15, 0.9));
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        h2 {
+            color: #DEB887;
+            font-size: 24px;
+            margin: 25px 0 15px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        button {
+            background: linear-gradient(145deg, #8B4513, #A0522D);
+            color: #FFE4B5;
+            font-size: 18px;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+        }
+
+        button:disabled {
+            background: linear-gradient(145deg, #555, #666);
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+        }
+
+        input {
+            font-size: 16px;
+            padding: 12px 20px;
+            width: 80%;
+            max-width: 600px;
+            margin: 15px auto;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px auto;
+            max-width: 700px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .result-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .fortune {
+            font-weight: bold;
+            color: #FFA07A;
+            font-size: 20px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .loader {
+            border: 4px solid rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #FFD700;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 添加响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<!-- body 部分保持不变 -->
+<body>
+
+    <div class="container">
+        <h1>卦象轮盘</h1>
+
+        <h2>请输入您的问题</h2>
+        <input type="text" id="question" placeholder="请输入您的问题" oninput="enableSpinButton()">
+        
+        <button id="spinButton" onclick="spinWheel()" disabled>转动轮盘</button>
+        <div class="result-box">
+            <p id="hexagram">卦象: (等待抽取)</p>
+            <p id="description">解释: </p>
+            <p class="fortune" id="fortune">吉凶: </p>
+        </div>
+
+        <h2>解卦</h2>
+        <button id="interpretButton" onclick="interpretHexagram()" disabled>解卦</button>
+        
+        <!-- 加载动画 -->
+        <div id="loader" class="loader"></div>
+
+        <div class="result-box">
+            <p id="interpretation">解卦: (等待结果)</p>
+        </div>
+    </div>
+
+    <script>
+        let hasSpun = false;  // 是否已经转动轮盘
+        let selectedHexagram = "";
+
+        function enableSpinButton() {
+            const question = document.getElementById("question").value;
+            const spinButton = document.getElementById("spinButton");
+            // 只有当问题不为空时，才允许转动轮盘
+            spinButton.disabled = question.trim() === "";
+        }
+
+        function spinWheel() {
+            if (hasSpun) return;  // 确保只能转动一次
+            
+            fetch("/spin")
+            .then(response => response.json())
+            .then(data => {
+                selectedHexagram = data.hexagram;
+                document.getElementById("hexagram").innerText = "卦象: " + data.hexagram;
+                document.getElementById("description").innerText = "解释: " + data.description;
+                document.getElementById("fortune").innerText = "吉凶: " + data.fortune;
+
+                hasSpun = true;
+                document.getElementById("spinButton").disabled = true; // 禁用转动轮盘按钮
+                document.getElementById("interpretButton").disabled = false; // 允许解卦
+            });
+        }
+
+        function interpretHexagram() {
+            const question = document.getElementById("question").value.trim();
+            if (!hasSpun || selectedHexagram === "" || question === "") {
+                alert("请先输入问题并转动轮盘！");
+                return;
+            }
+
+            // 显示加载动画
+            document.getElementById("loader").style.display = "block";
+
+            fetch("/interpret", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ hexagram: selectedHexagram, question: question })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("interpretation").innerText = "解卦: " + data.interpretation;
+            })
+            .catch(error => {
+                document.getElementById("interpretation").innerText = "解卦失败，请稍后重试";
+            })
+            .finally(() => {
+                document.getElementById("loader").style.display = "none"; // 隐藏加载动画
+            });
+        }
+    </script>
+
+</body>
+</html>
